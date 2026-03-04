@@ -12,7 +12,7 @@ class CrudOnStorageTechnology(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_db(self, deployment_id: str, db_name: str):
+    def update_db(self, deployment_id: str, db_new_name: str):
         raise NotImplementedError
 
     @abstractmethod
