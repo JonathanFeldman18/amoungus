@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class CrudOnStorageTechnology(ABC):
+
     @abstractmethod
     def create_db(self, db_name: str, username: str) -> str:
         raise NotImplementedError
