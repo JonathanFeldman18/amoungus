@@ -19,7 +19,7 @@ class Base(DeclarativeBase):
 
 class Deployment(Base):
     __tablename__ = "deployments"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     db_name: Mapped[str] = mapped_column(String(255))
     status: Mapped[Optional[StatusType]]
     username: Mapped[str] = mapped_column(String(255))
