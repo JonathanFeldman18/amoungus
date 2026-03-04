@@ -1,11 +1,14 @@
 from src.CRUD.crud_abc import CrudOnStorageTechnology
 import pymongo
 
+from src.postgress_connection import PostgresConnection
+
 
 class MongoCrud(CrudOnStorageTechnology):
     def __init__(self):
         self.client = pymongo.MongoClient("mongodb://nraboy:password1234@localhost:27017/")
         super().__init__()
+        self.postgres_connection = PostgresConnection()
 
     def create_db(self, db_name: str, username: str) -> str:
         new_db = self.client[db_name]
@@ -23,4 +26,6 @@ class MongoCrud(CrudOnStorageTechnology):
         self.client.drop_database("temp")
 
     def delete_db(self, deployment_id: str, username: str):
+        self.postgres_connection.get_deployment_by_id(deployment_id)
+        if
         self.client.drop_database("temp")
