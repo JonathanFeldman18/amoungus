@@ -1,32 +1,17 @@
 import datetime
-from uuid import UUID, uuid7
+from uuid import UUID
 
 import sqlalchemy as alc
-from sqlalchemy import String, select, Enum, Row
-from sqlalchemy import update, DateTime
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from starlette import status
+from sqlalchemy import select
+from sqlalchemy import update
+from sqlalchemy.orm import sessionmaker
 
-from src.my_app.deployment_request import DeploymentRequest
-from src.my_app.status_type import StatusType
+from src.deployment_table import DeploymentTable, Base
 from src.my_exceptions.delete_deployment_exception import DeleteDeploymentException
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.my_exceptions.deployment_exist_exception import DeploymentExistException
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Deployment(Base):
-    __tablename__ = "deployments"
-    id: Mapped[UUID] = mapped_column(primary_key=True, nullable=False, default=uuid7)
-    db_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    status: Mapped[StatusType] = mapped_column(Enum(StatusType), nullable=False)
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
-    creation_time: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+from src.request.deployment_request import DeploymentRequest
+from src.status_type import StatusType
 
 
 class PostgresConnection:
@@ -38,7 +23,8 @@ class PostgresConnection:
 
     def check_if_deployment_exist(self, db_name: str, username: str) -> None:
         with self.Session() as session:
-            select_stmt = select(Deployment).filter(Deployment.db_name == db_name).filter(Deployment.username == username)
+            select_stmt = select(DeploymentTable).filter(DeploymentTable.db_name == db_name).filter(
+                DeploymentTable.username == username)
             result = session.execute(select_stmt).scalars().first()
         if result is not None and result.status.name != StatusType.DELETED.name:
             raise DeploymentExistException("The record already exists.")
@@ -46,7 +32,7 @@ class PostgresConnection:
 
     def create_new_deployment(self, deployment: DeploymentRequest) -> str:
         with self.Session() as session:
-            deployment = Deployment(
+            deployment = DeploymentTable(
                 db_name=deployment.db_name,
                 status="CREATED",
                 username=deployment.username,
@@ -55,13 +41,13 @@ class PostgresConnection:
             session.add(deployment)
             session.commit()
 
-            result = session.query(Deployment).order_by(Deployment.creation_time.desc()).first()
+            result = session.query(DeploymentTable).order_by(DeploymentTable.creation_time.desc()).first()
 
         return str(result.id)
 
     def get_deployment_by_id(self, deployment_id: UUID) -> dict:
         with self.Session() as session:
-            select_stmt = select(Deployment).filter(Deployment.id == deployment_id)
+            select_stmt = select(DeploymentTable).filter(DeploymentTable.id == deployment_id)
             result = session.execute(select_stmt)
             result = result.scalars().first()
         if result:
@@ -75,8 +61,8 @@ class PostgresConnection:
             raise DeleteDeploymentException("The deployment is unavailable - deleted.")
         with self.Session() as session:
             update_stmt = (
-                update(Deployment)
-                .where(Deployment.id == deployment_id)
+                update(DeploymentTable)
+                .where(DeploymentTable.id == deployment_id)
                 .values(db_name=new_db_name)
             )
             session.execute(update_stmt)
@@ -89,9 +75,9 @@ class PostgresConnection:
         if result.get("username") == username:
             with self.Session() as session:
                 delete_stmt = (
-                    update(Deployment)
-                    .where(Deployment.id == deployment_id)
-                    .where(Deployment.username == username)
+                    update(DeploymentTable)
+                    .where(DeploymentTable.id == deployment_id)
+                    .where(DeploymentTable.username == username)
                     .values(status="DELETED")
                 )
                 session.execute(delete_stmt)
@@ -102,8 +88,8 @@ class PostgresConnection:
     def get_db_name_by_id(self, deployment_id: UUID):
         with self.Session() as session:
             select_stmt = (
-                select(Deployment)
-                .where(Deployment.id == deployment_id)
+                select(DeploymentTable)
+                .where(DeploymentTable.id == deployment_id)
             )
             result = session.execute(select_stmt)
 
@@ -118,9 +104,9 @@ class PostgresConnection:
             raise DeleteDeploymentException("The deployment is unavailable - deleted.")
         with self.Session() as session:
             select_stmt = (
-                select(Deployment)
-                .where(Deployment.id == deployment_id)
-                .where(Deployment.username == username)
+                select(DeploymentTable)
+                .where(DeploymentTable.id == deployment_id)
+                .where(DeploymentTable.username == username)
             )
             result = session.execute(select_stmt).scalar()
 
