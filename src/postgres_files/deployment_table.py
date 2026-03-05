@@ -4,7 +4,7 @@ from uuid import uuid7
 from sqlalchemy import UUID, String, Enum, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from src.status_type import StatusType
+from src.postgres_files.status_type import StatusType
 
 
 class Base(DeclarativeBase):

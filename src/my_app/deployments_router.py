@@ -8,7 +8,7 @@ from src.request.deployment_request import DeploymentRequest
 from src.request.update_db_name_request import UpdateDbNameRequest
 from src.my_app.validation import validate_db_name, validate_deployment
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
-from src.postgress_connection import PostgresConnection
+from src.postgres_files.postgress_connection import PostgresConnection
 
 router = APIRouter(prefix="/deployments", tags=["deployments"])
 

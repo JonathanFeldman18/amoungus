@@ -3,7 +3,7 @@ from uuid import UUID
 from src.CRUD.crud_abc import CrudOnStorageTechnology
 import pymongo
 
-from src.postgress_connection import PostgresConnection
+from src.postgres_files.postgress_connection import PostgresConnection
 
 
 class MongocCommends(CrudOnStorageTechnology):

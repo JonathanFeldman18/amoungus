@@ -6,12 +6,12 @@ from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.orm import sessionmaker
 
-from src.deployment_table import DeploymentTable, Base
+from src.postgres_files.deployment_table import DeploymentTable, Base
 from src.my_exceptions.delete_deployment_exception import DeleteDeploymentException
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.my_exceptions.deployment_exist_exception import DeploymentExistException
 from src.request.deployment_request import DeploymentRequest
-from src.status_type import StatusType
+from src.postgres_files.status_type import StatusType
 
 
 class PostgresConnection:
