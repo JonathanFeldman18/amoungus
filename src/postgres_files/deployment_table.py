@@ -1,7 +1,7 @@
 import datetime
-from uuid import uuid7
+from uuid import UUID, uuid7
 
-from sqlalchemy import UUID, String, Enum, DateTime
+from sqlalchemy import String, Enum, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src.postgres_files.status_type import StatusType
