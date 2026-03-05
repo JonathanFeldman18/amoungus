@@ -9,7 +9,7 @@ class CrudOnStorageTechnology(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def read_db(self, deployment_id: UUID) -> dict:
+        def read_db(self, deployment_id: UUID) -> dict:
         raise NotImplementedError
 
     @abstractmethod
