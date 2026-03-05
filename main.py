@@ -1,18 +1,4 @@
-import datetime
-from typing import Optional
-
-import uvicorn
-from fastapi import FastAPI
-from sqlalchemy import String
-from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
-
-from src.CRUD.mongo_commands import MongocCommends
-from src.my_app.deployment_request import DeploymentRequest
 from src.my_app.my_rest import MyApp
-import sqlalchemy as alc
-
-from src.my_app.status_type import StatusType
-from src.postgress_connection import PostgresConnection
 
 if __name__ == '__main__':
     #postgres_connection = PostgresConnection()
