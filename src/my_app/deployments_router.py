@@ -26,9 +26,9 @@ async def add_deployment(deployment: DeploymentRequest):
             if result is None:
                 deployment_id = postgres_connection.create_new_deployment(deployment)
                 mongo_commands.create_db(db_name, username)
-                return JSONResponse(status_code=200, content={"id": deployment_id})
+                return JSONResponse(status_code=201, content={"id": deployment_id})
     except Exception as e:
-        return JSONResponse(status_code=404, content={"Error": str(e)})
+        return JSONResponse(status_code=422, content={"Error": str(e)})
 
 
 @router.get("/:<deployment_id> ", tags=["deployments"])
@@ -51,7 +51,7 @@ async def update_db_name(deployment_id: UUID, update_db_name_request: UpdateDbNa
             postgres_connection.update_db_name(deployment_id, update_db_name_request.new_db_name)
             return JSONResponse(status_code=200, content={"id": str(deployment_id)})
     except Exception as e:
-        return JSONResponse(status_code=404, content={"Error": str(e)})
+        return JSONResponse(status_code=422, content={"Error": str(e)})
 
 
 @router.delete("/:<deployment_id>", tags=["deployments"])
@@ -59,9 +59,9 @@ async def delete_deployment(deployment_id: UUID, username: str):
     try:
         postgres_connection.delete_deployment(deployment_id, username)
         mongo_commands.delete_db(deployment_id, username)
-        return JSONResponse(status_code=204, content="")
+        return JSONResponse(status_code=201, content="")
     except Exception as e:
-        return JSONResponse(status_code=404, content={"Error": str(e)})
+        return JSONResponse(status_code=422, content={"Error": str(e)})
 
 
 @router.get("/connection_string/:<deployment_id>", tags=["deployments"])
