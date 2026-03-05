@@ -1,63 +1,130 @@
 import datetime
-from enum import Enum
+from uuid import UUID, uuid7
+
 import sqlalchemy as alc
-from typing import List
-from typing import Optional
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import String, select, Enum, Row
+from sqlalchemy import update, DateTime
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import Session
+from starlette import status
 
-class StatusType(Enum):
-    CREATED = 1
-    DELETED = 2
+from src.my_app.deployment_request import DeploymentRequest
+from src.my_app.status_type import StatusType
+from src.my_exceptions.delete_deployment_exception import DeleteDeploymentException
+from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
+from src.my_exceptions.deployment_exist_exception import DeploymentExistException
+
 
 class Base(DeclarativeBase):
     pass
 
+
 class Deployment(Base):
     __tablename__ = "deployments"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    db_name: Mapped[str] = mapped_column(String(255))
-    status: Mapped[Optional[StatusType]]
-    username: Mapped[str] = mapped_column(String(255))
-    creation_time: Mapped[datetime.datetime] = mapped_column()
+    id: Mapped[UUID] = mapped_column(primary_key=True, nullable=False, default=uuid7)
+    db_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[StatusType] = mapped_column(Enum(StatusType), nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    creation_time: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
 
-    def __repr__(self) -> str:
-        return (f"deployments(id={self.id!r}, db_name={self.db_name!r}, status={self.status!r},"
-                f" username={self.username!r}, creation_time={self.creation_time!r})")
 
 class PostgresConnection:
     def __init__(self):
-        self.engine = alc.create_engine("postgresql://{}:{}@{}/{}".format("postgres", "postgres", "postgres:5432", "postgres"))
-        """self.deployments = alc.Table(
-            'deployments',
-            self.metadata,
-            alc.Column('id', alc.String, primary_key=True),
-            alc.Column('db_name', alc.VARCHAR(255)),
-            alc.Column('status', alc.Integer),
-            alc.Column('username', alc.VARCHAR(255)),
-            alc.Column('creation_time', alc.TIMESTAMP),
-        )"""
-        self.metadata = Base.metadata
-        self.metadata.create_all(self.engine)
+        self.engine = alc.create_engine(
+            "postgresql+psycopg2://{}:{}@{}/{}".format("postgres", "postgres", "localhost:5432", "postgres"))
+        Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine)
 
-    def create_new_deployment(self):
-        with Session(self.engine) as session:
-            spongebob = Deployment(
-                db_name="spongebob",
+    def check_if_deployment_exist(self, db_name: str, username: str) -> None:
+        with self.Session() as session:
+            select_stmt = select(Deployment).filter(Deployment.db_name == db_name).filter(Deployment.username == username)
+            result = session.execute(select_stmt).scalars().first()
+        if result is not None and result.status.name != StatusType.DELETED.name:
+            raise DeploymentExistException("The record already exists.")
+        return None
+
+    def create_new_deployment(self, deployment: DeploymentRequest) -> str:
+        with self.Session() as session:
+            deployment = Deployment(
+                db_name=deployment.db_name,
                 status="CREATED",
-                username="Spongebob Squarepants",
+                username=deployment.username,
                 creation_time=datetime.datetime.now()
             )
-            session.add(spongebob)
+            session.add(deployment)
             session.commit()
 
-        """session = Session(self.engine)
+            result = session.query(Deployment).order_by(Deployment.creation_time.desc()).first()
 
-        stmt = alc.select(Deployment).where(Deployment.db_name.in_(["spongebob"]))
+        return str(result.id)
 
-        for user in session.scalars(stmt):
-            print(user)"""
+    def get_deployment_by_id(self, deployment_id: UUID) -> dict:
+        with self.Session() as session:
+            select_stmt = select(Deployment).filter(Deployment.id == deployment_id)
+            result = session.execute(select_stmt)
+            result = result.scalars().first()
+        if result:
+            return {"id": result.id, "db_name": result.db_name, "status": result.status.name,
+                    "creation_time": result.creation_time, "username": result.username}
+        raise DeploymentDoesntExistException(f"Deployment id '{deployment_id}' was not found in the deployments table.")
+
+    def update_db_name(self, deployment_id: UUID, new_db_name: str) -> None:
+        result = self.get_deployment_by_id(deployment_id)
+        if result.get("status") == StatusType.DELETED.name:
+            raise DeleteDeploymentException("The deployment is unavailable - deleted.")
+        with self.Session() as session:
+            update_stmt = (
+                update(Deployment)
+                .where(Deployment.id == deployment_id)
+                .values(db_name=new_db_name)
+            )
+            session.execute(update_stmt)
+            session.commit()
+
+    def delete_deployment(self, deployment_id: UUID, username: str) -> None:
+        result = self.get_deployment_by_id(deployment_id)
+        if result.get("status") == StatusType.DELETED.name:
+            raise DeleteDeploymentException("The deployment is unavailable - deleted.")
+        if result.get("username") == username:
+            with self.Session() as session:
+                delete_stmt = (
+                    update(Deployment)
+                    .where(Deployment.id == deployment_id)
+                    .where(Deployment.username == username)
+                    .values(status="DELETED")
+                )
+                session.execute(delete_stmt)
+                session.commit()
+        else:
+            raise DeleteDeploymentException(f"Username '{username}' does not match the admin details.")
+
+    def get_db_name_by_id(self, deployment_id: UUID):
+        with self.Session() as session:
+            select_stmt = (
+                select(Deployment)
+                .where(Deployment.id == deployment_id)
+            )
+            result = session.execute(select_stmt)
+
+        if result:
+            return session.execute(select_stmt).scalar().db_name
+        raise DeploymentDoesntExistException(
+            f"Deployment id '{deployment_id}' was not found in the deployments table.")
+
+    def get_db_name_by_id_and_username(self, deployment_id: UUID, username: str) -> str:
+        result = self.get_deployment_by_id(deployment_id)
+        if result.get("status") == StatusType.DELETED.name:
+            raise DeleteDeploymentException("The deployment is unavailable - deleted.")
+        with self.Session() as session:
+            select_stmt = (
+                select(Deployment)
+                .where(Deployment.id == deployment_id)
+                .where(Deployment.username == username)
+            )
+            result = session.execute(select_stmt).scalar()
+
+        if result:
+            return result.db_name
+        raise DeploymentDoesntExistException(
+            f"Deployment id '{deployment_id}' and username '{username}' was not found in the deployments table.")
