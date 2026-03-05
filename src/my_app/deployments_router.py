@@ -4,10 +4,9 @@ from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
 from src.CRUD.mongo_commands import MongocCommends
-from src.my_app.deployment_request import DeploymentRequest
-from src.my_app.update_db_name_request import UpdateDbNameRequest
+from src.request.deployment_request import DeploymentRequest
+from src.request.update_db_name_request import UpdateDbNameRequest
 from src.my_app.validation import validate_db_name, validate_deployment
-from src.my_exceptions.checking_deployment_exception import CheckingDeploymentException
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.postgress_connection import PostgresConnection
 
