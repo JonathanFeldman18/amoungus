@@ -21,14 +21,13 @@ class PostgresConnection:
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
 
-    def check_if_deployment_exist(self, db_name: str, username: str) -> None:
+    def check_if_deployment_exist(self, db_name: str, username: str):
         with self.Session() as session:
             select_stmt = select(DeploymentTable).filter(DeploymentTable.db_name == db_name).filter(
                 DeploymentTable.username == username).order_by(DeploymentTable.creation_time.desc())
             result = session.execute(select_stmt).scalars().first()
         if result is not None and result.status.name != StatusType.DELETED.name:
             raise DeploymentExistException("The deployment already exists.")
-        return None
 
     def create_new_deployment(self, deployment: DeploymentRequest) -> str:
         with self.Session() as session:
@@ -83,7 +82,7 @@ class PostgresConnection:
                 session.execute(delete_stmt)
                 session.commit()
         else:
-            raise DeleteDeploymentException(f"Username '{username}' does not match the admin details.")
+            raise DeleteDeploymentException(f"Username '{username}' does not match the admin details of the deployment.")
 
     def get_db_name_by_id(self, deployment_id: UUID):
         with self.Session() as session:
