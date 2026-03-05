@@ -27,7 +27,7 @@ class PostgresConnection:
                 DeploymentTable.username == username).order_by(DeploymentTable.creation_time.desc())
             result = session.execute(select_stmt).scalars().first()
         if result is not None and result.status.name != StatusType.DELETED.name:
-            raise DeploymentExistException("The record already exists.")
+            raise DeploymentExistException("The deployment already exists.")
         return None
 
     def create_new_deployment(self, deployment: DeploymentRequest) -> str:
