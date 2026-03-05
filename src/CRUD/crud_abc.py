@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 
 class CrudOnStorageTechnology(ABC):
@@ -8,13 +9,13 @@ class CrudOnStorageTechnology(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def read_db(self, deployment_id: str) -> dict:
+    def read_db(self, deployment_id: UUID) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def update_db(self, deployment_id: str, db_new_name: str):
+    def update_db(self, old_db_name, new_db_name: str):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_db(self, deployment_id: str, username: str):
+    def delete_db(self, deployment_id: UUID, username: str):
         raise NotImplementedError
