@@ -2,13 +2,10 @@ import datetime
 from uuid import UUID, uuid7
 
 from sqlalchemy import String, Enum, DateTime
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
+from src.postgres_files.base_class import Base
 from src.postgres_files.status_type import StatusType
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class DeploymentTable(Base):
