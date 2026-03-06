@@ -3,6 +3,7 @@ import re
 from src.my_exceptions.checking_deployment_exception import CheckingDeploymentException
 from src.my_exceptions.validate_password_exception import ValidatePasswordException
 from src.my_exceptions.validate_with_auth_exception import ValidateWithAuthException
+from src.postgres_files.permission_level import PermissionLevel
 
 
 def check_auth(login_username: str, input_username: str):
@@ -36,11 +37,6 @@ def validate_username(username: str):
 def validate_deployment(db_name: str, username: str):
     validate_db_name(db_name)
     validate_username(username)
-
-
-def validate_permission_level(permission_level: str):
-    if permission_level.upper() not in ["READ", "READWRITE"]:
-        raise ValidateWithAuthException(f"The permission level should fit options {["READ", "READWRITE"]}.")
 
 
 def validate_password(password: str):
