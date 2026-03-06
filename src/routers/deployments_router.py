@@ -37,6 +37,7 @@ async def create_deployment(deployment: DeploymentRequest,
         postgres_connection.check_if_deployment_exist(db_name, username)
         deployment_id = postgres_connection.create_new_deployment(deployment)
         mongo_commands.create_db(db_name, username)
+        mongo_commands.set_database_admin(credentials.username, username, db_name)
         return JSONResponse(status_code=201, content={"id": deployment_id})
     except (CheckingDeploymentException, DeploymentExistException, ValidateWithAuthException) as e:
         return JSONResponse(status_code=422, content={"Error": str(e)})
@@ -55,7 +56,7 @@ async def get_deployment(deployment_id: UUID, credentials: Annotated[HTTPBasicCr
 @router.put("/{deployment_id}", tags=["Deployments"])
 async def update_deployment(deployment_id: UUID, update_db_name_request: UpdateDbNameRequest,
                             credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    new_db_name = update_db_name_request.new_db_name
+    new_db_name = update_db_name_request.db_name
     try:
         validate_db_name(new_db_name)
         deployment = postgres_connection.get_deployment_by_id(deployment_id)
