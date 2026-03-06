@@ -3,6 +3,7 @@ from uuid import UUID
 from src.CRUD.crud_abc import CrudOnStorageTechnology
 import pymongo
 
+from src.postgres_files.permission_level import PermissionLevel
 from src.postgres_files.postgress_connection import PostgresConnection
 
 
@@ -11,6 +12,14 @@ class MongocCommends(CrudOnStorageTechnology):
         self.client = pymongo.MongoClient("mongodb://nraboy:password1234@localhost:27017/")
         super().__init__()
         self.postgres_connection = PostgresConnection()
+
+    def set_database_admin(self, username: str, password: str, db_name: str):
+        self.client[db_name].command("createUser", username, pwd=password, roles=[{"role": "dbAdmin", "db": db_name},
+                                                                                  {"role": "readWrite", "db": db_name}])
+
+    def add_user_to_db(self, username: str, password: str, permission_level: PermissionLevel, db_name: str):
+        self.client[db_name].command("createUser", username, pwd=password,
+                                     roles=[{"role": permission_level.value, "db": db_name}])
 
     def get_url(self) -> str:
         return "mongodb://nraboy:password1234@localhost:27017/"
@@ -24,7 +33,7 @@ class MongocCommends(CrudOnStorageTechnology):
 
     def update_db(self, old_db_name, new_db_name: str):
         for coll in self.client[old_db_name].list_collection_names():
-            #self.client[new_db_name][coll]
+            # self.client[new_db_name][coll]
             for record in self.client[old_db_name][coll].find():
                 a = self.client[new_db_name][coll].insert_one(record)
         self.client.drop_database(old_db_name)
