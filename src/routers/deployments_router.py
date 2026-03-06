@@ -34,7 +34,7 @@ async def create_deployment(deployment: DeploymentRequest,
         postgres_connection.check_if_deployment_exist(db_name, username)
         deployment_id = postgres_connection.create_new_deployment(deployment)
         mongo_commands.create_db(db_name, username)
-        mongo_commands.set_database_admin(credentials.username, username, db_name)
+        #mongo_commands.set_database_admin(credentials.username, username, db_name)
         return JSONResponse(status_code=201, content={"id": deployment_id})
     except (CheckingDeploymentException, DeploymentExistException, ValidateWithAuthException) as e:
         return JSONResponse(status_code=422, content={"Error": str(e)})
@@ -58,6 +58,8 @@ async def update_deployment(deployment_id: UUID, update_db_name_request: UpdateD
         validate_db_name(new_db_name)
         deployment = postgres_connection.get_deployment_by_id(deployment_id)
         check_auth(credentials.username, deployment.get("username"))
+        if deployment.get("db_name") == new_db_name:
+            return JSONResponse(status_code=200, content={"message": "The old and new db names are the same."})
         mongo_commands.update_db(deployment.get("db_name"), new_db_name)
         postgres_connection.update_db_name(deployment_id, new_db_name)
         return JSONResponse(status_code=200, content={"id": str(deployment_id)})

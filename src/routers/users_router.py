@@ -31,8 +31,8 @@ async def create_user(user: User, credentials: Annotated[HTTPBasicCredentials, D
         check_full_auth(credentials.username, user.username, credentials.password, user.password)
         postgres_connection.check_if_user_exist(user.username)
         postgres_connection.create_new_user(user)
-        mongo_commands.add_user_to_db(user.username, user.password, user.permission_level,
-                                      postgres_connection.get_db_name_by_id(user.deployment_id))
+        #mongo_commands.add_user_to_db(user.username, user.password, user.permission_level,
+        #                              postgres_connection.get_db_name_by_id(user.deployment_id))
         return JSONResponse(status_code=201, content={"message": "The user has been successfully saved."})
     except (CheckingDeploymentException, ValidatePasswordException,
             DeploymentDoesntExistException, UserExistException,
