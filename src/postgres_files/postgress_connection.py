@@ -6,13 +6,14 @@ from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.orm import sessionmaker
 
+from src.my_exceptions.user_exist_exception import UserExistException
 from src.postgres_files.deployment_table import DeploymentTable, Base
 from src.my_exceptions.delete_deployment_exception import DeleteDeploymentException
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.my_exceptions.deployment_exist_exception import DeploymentExistException
-from src.postgres_files.user_model import User
+from src.requests.user_request import User
 from src.postgres_files.users_table import UsersTable
-from src.request.deployment_request import DeploymentRequest
+from src.requests.deployment_request import DeploymentRequest
 from src.postgres_files.status_type import StatusType
 
 
@@ -23,13 +24,24 @@ class PostgresConnection:
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
 
+    def check_if_user_exist(self, username: str) -> User:
+        with self.Session() as session:
+            select_stmt = select(UsersTable).filter(UsersTable.username == username)
+            result = session.execute(select_stmt).scalars().first()
+        if result is not None:
+            raise UserExistException(f"The username '{username}' already exists.")
+
     def create_new_user(self, user: User):
-        self.get_deployment_by_id(user.deployment_id)
+        deployment = self.get_deployment_by_id(user.deployment_id)
+        if user.username == deployment.get("username"):
+            raise UserExistException("The username is already the admin of this db.")
+        if deployment.get("status") == StatusType.DELETED.name:
+            raise DeleteDeploymentException("The deployment is unavailable - deleted.")
         with self.Session() as session:
             user = UsersTable(
                 username=user.username,
                 password=user.password,
-                permission_level=user.permission_level,
+                permission_level=user.permission_level.upper(),
                 deployment_id=user.deployment_id
             )
             session.add(user)
