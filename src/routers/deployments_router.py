@@ -11,7 +11,7 @@ from src.my_exceptions.deployment_exist_exception import DeploymentExistExceptio
 from src.my_exceptions.validate_with_auth_exception import ValidateWithAuthException
 from src.requests.deployment_request import DeploymentRequest
 from src.requests.update_db_name_request import UpdateDbNameRequest
-from src.my_app.validation import validate_db_name, validate_deployment, check_auth
+from src.routers.validations import validate_db_name, validate_deployment, check_auth
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.postgres_files.postgress_connection import PostgresConnection
 
@@ -74,7 +74,7 @@ async def delete_deployment(deployment_id: UUID, username: str,
         check_auth(credentials.username, username)
         postgres_connection.delete_deployment(deployment_id, username)
         mongo_commands.delete_db(deployment_id, username)
-        return JSONResponse(status_code=201, content={"message": "Deleted successfully"})
+        return JSONResponse(status_code=204, content={"message": "Deleted successfully"})
     except Exception as e:
         return JSONResponse(status_code=422, content={"Error": str(e)})
 
