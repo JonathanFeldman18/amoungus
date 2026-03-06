@@ -1,5 +1,5 @@
-from fastapi import FastAPI
 import uvicorn
+from fastapi import FastAPI
 
 from src.routers import deployments_router, users_router
 

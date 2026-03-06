@@ -3,7 +3,6 @@ import re
 from src.my_exceptions.checking_deployment_exception import CheckingDeploymentException
 from src.my_exceptions.validate_password_exception import ValidatePasswordException
 from src.my_exceptions.validate_with_auth_exception import ValidateWithAuthException
-from src.postgres_files.permission_level import PermissionLevel
 
 
 def check_auth(login_username: str, input_username: str):

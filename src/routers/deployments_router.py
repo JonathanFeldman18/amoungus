@@ -7,13 +7,13 @@ from starlette.responses import JSONResponse
 
 from src.CRUD.mongo_commands import MongocCommends
 from src.my_exceptions.checking_deployment_exception import CheckingDeploymentException
+from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.my_exceptions.deployment_exist_exception import DeploymentExistException
 from src.my_exceptions.validate_with_auth_exception import ValidateWithAuthException
+from src.postgres_files.postgress_connection import PostgresConnection
 from src.requests.deployment_request import DeploymentRequest
 from src.requests.update_db_name_request import UpdateDbNameRequest
 from src.routers.validations import validate_db_name, validate_deployment, check_auth
-from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
-from src.postgres_files.postgress_connection import PostgresConnection
 
 router = APIRouter(prefix="/deployments", tags=["Deployments"])
 
@@ -21,9 +21,6 @@ security = HTTPBasic()
 
 mongo_commands = MongocCommends()
 postgres_connection = PostgresConnection()
-
-
-# , credentials: Annotated[HTTPBasicCredentials, Depends(security)])
 
 
 @router.post("/", tags=["Deployments"])

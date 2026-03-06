@@ -6,15 +6,15 @@ from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.orm import sessionmaker
 
-from src.my_exceptions.user_exist_exception import UserExistException
-from src.postgres_files.deployment_table import DeploymentTable, Base
 from src.my_exceptions.delete_deployment_exception import DeleteDeploymentException
 from src.my_exceptions.deployment_doesnt_exist_exception import DeploymentDoesntExistException
 from src.my_exceptions.deployment_exist_exception import DeploymentExistException
-from src.requests.user_request import User
+from src.my_exceptions.user_exist_exception import UserExistException
+from src.postgres_files.deployment_table import DeploymentTable, Base
+from src.postgres_files.status_type import StatusType
 from src.postgres_files.users_table import UsersTable
 from src.requests.deployment_request import DeploymentRequest
-from src.postgres_files.status_type import StatusType
+from src.requests.user_request import User
 
 
 class PostgresConnection:
@@ -46,7 +46,6 @@ class PostgresConnection:
             )
             session.add(user)
             session.commit()
-
 
     def check_if_deployment_exist(self, db_name: str, username: str):
         with self.Session() as session:
@@ -109,7 +108,8 @@ class PostgresConnection:
                 session.execute(delete_stmt)
                 session.commit()
         else:
-            raise DeleteDeploymentException(f"Username '{username}' does not match the admin details of the deployment.")
+            raise DeleteDeploymentException(
+                f"Username '{username}' does not match the admin details of the deployment.")
 
     def get_db_name_by_id(self, deployment_id: UUID):
         with self.Session() as session:
