@@ -8,5 +8,5 @@ from src.postgres_files.permission_level import PermissionLevel
 class User(BaseModel):
     username: str
     password: str
-    permission_level: PermissionLevel = "READ"
-    deployment_id: UUID
+    permission_level: str = "read"
+    deployment_id: UUID = "string"
