@@ -24,7 +24,7 @@ class PostgresConnection:
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
 
-    def check_if_user_exist(self, username: str) -> User:
+    def check_if_user_exist(self, username: str):
         with self.Session() as session:
             select_stmt = select(UsersTable).filter(UsersTable.username == username)
             result = session.execute(select_stmt).scalars().first()
@@ -41,7 +41,7 @@ class PostgresConnection:
             user = UsersTable(
                 username=user.username,
                 password=user.password,
-                permission_level=user.permission_level.upper(),
+                permission_level=user.permission_level,
                 deployment_id=user.deployment_id
             )
             session.add(user)
