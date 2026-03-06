@@ -29,7 +29,6 @@ async def create_user(user: User, credentials: Annotated[HTTPBasicCredentials, D
         validate_password(user.password)
         validate_username(user.username)
         check_full_auth(credentials.username, user.username, credentials.password, user.password)
-        validate_permission_level(user.permission_level)
         postgres_connection.check_if_user_exist(user.username)
         postgres_connection.create_new_user(user)
         return JSONResponse(status_code=201, content={"message": "The user has been successfully saved."})
